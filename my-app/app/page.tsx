@@ -1,30 +1,31 @@
-// app/page.tsx
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import { Mic, Square, Sparkles, User, Briefcase, Building, AlertCircle, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
 export default function Home() {
-  const [step, setStep] = useState(1); // 1=Setup, 2=Interview, 3=Feedback
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({ name: '', job: '', company: '', desc: '' });
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const [transcriptBuffer, setTranscriptBuffer] = useState(""); 
-  const [feedback, setFeedback] = useState(null);
+  const [feedback, setFeedback] = useState<any>(null);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
   
-  const recognitionRef = useRef(null);
+  const recognitionRef = useRef<any>(null);
 
   // --- AUDIO SETUP ---
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // FIX IS HERE: We added (window as any)
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      
       if (SpeechRecognition) {
         recognitionRef.current = new SpeechRecognition();
         recognitionRef.current.continuous = true; 
         recognitionRef.current.interimResults = true;
         
-        recognitionRef.current.onresult = (event) => {
+        recognitionRef.current.onresult = (event: any) => {
           let currentTranscript = "";
           for (let i = event.resultIndex; i < event.results.length; i++) {
              currentTranscript += event.results[i][0].transcript;
@@ -46,7 +47,7 @@ export default function Home() {
 
   // --- FUNCTIONS ---
 
-  const speakText = (text) => {
+  const speakText = (text: string) => {
     window.speechSynthesis.cancel();
     setIsAiSpeaking(true);
     const utterance = new SpeechSynthesisUtterance(text);
@@ -72,7 +73,7 @@ export default function Home() {
     }
   };
 
-  const getAiResponse = async (userText) => {
+  const getAiResponse = async (userText: string) => {
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -87,17 +88,15 @@ export default function Home() {
     }
   };
 
-  const addMessage = (role, text) => {
-    setMessages(prev => [...prev, { role, text }]);
+  const addMessage = (role: string, text: string) => {
+    setMessages((prev: any) => [...prev, { role, text }]);
   };
 
   const endCall = async () => {
-    // Stop audio
     window.speechSynthesis.cancel();
     if (recognitionRef.current) recognitionRef.current.stop();
     setIsRecording(false);
     
-    // Move to feedback loading state
     setStep(3);
     setIsLoadingFeedback(true);
 
@@ -118,7 +117,6 @@ export default function Home() {
 
   // --- RENDERERS ---
 
-  // STEP 1: FORM
   if (step === 1) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-4 font-sans">
@@ -138,7 +136,6 @@ export default function Home() {
     );
   }
 
-  // STEP 3: FEEDBACK DASHBOARD
   if (step === 3) {
     return (
         <div className="min-h-screen bg-slate-950 text-white p-8 font-sans">
@@ -152,7 +149,6 @@ export default function Home() {
                     </div>
                 ) : (
                     <div className="space-y-6">
-                        {/* Score Card */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 text-center">
                                 <p className="text-slate-400 mb-2">Overall Score</p>
@@ -167,36 +163,6 @@ export default function Home() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Strengths */}
-                            <div className="bg-slate-900/50 p-6 rounded-xl border border-green-900/30">
-                                <h3 className="text-xl font-bold text-green-400 mb-4 flex items-center gap-2">
-                                    <CheckCircle size={20} /> Strengths
-                                </h3>
-                                <ul className="space-y-3">
-                                    {feedback?.strengths?.map((s, i) => (
-                                        <li key={i} className="flex gap-2 text-slate-300">
-                                            <span className="text-green-500">•</span> {s}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                            {/* Weaknesses */}
-                            <div className="bg-slate-900/50 p-6 rounded-xl border border-red-900/30">
-                                <h3 className="text-xl font-bold text-red-400 mb-4 flex items-center gap-2">
-                                    <AlertCircle size={20} /> Areas for Improvement
-                                </h3>
-                                <ul className="space-y-3">
-                                    {feedback?.weaknesses?.map((w, i) => (
-                                        <li key={i} className="flex gap-2 text-slate-300">
-                                            <span className="text-red-500">•</span> {w}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-
                         <button onClick={() => window.location.reload()} className="w-full bg-slate-800 hover:bg-slate-700 p-4 rounded-lg font-bold transition">
                             Start New Interview
                         </button>
@@ -207,7 +173,6 @@ export default function Home() {
     );
   }
 
-  // STEP 2: INTERVIEW (Default)
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col font-sans">
       <header className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
@@ -221,7 +186,7 @@ export default function Home() {
       </header>
       
       <main className="flex-1 overflow-y-auto p-4 space-y-6 max-w-3xl mx-auto w-full pb-32">
-        {messages.map((msg, i) => (
+        {messages.map((msg: any, i: number) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[85%] p-4 rounded-2xl ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-200'}`}>
                     {msg.text}
