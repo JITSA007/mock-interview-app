@@ -13,7 +13,7 @@ export default function Home() {
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
   
   const recognitionRef = useRef<any>(null);
-
+<title>MockMate By Jitendra Prajapat</title>
   // --- AUDIO SETUP ---
   useEffect(() => {
     if (typeof window !== 'undefined') {
